@@ -1,0 +1,238 @@
+// ══════════════════════════════════════════════════════
+// Schéma Prisma – PasàPasFrance
+// Base : PostgreSQL (Render)
+// Basé sur le diagramme de classes UML du projet
+// ══════════════════════════════════════════════════════
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── 1. Utilisateur ──────────────────────────────────
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String   // hashé avec bcrypt
+  prenom    String
+  langue    String   @default("fr")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  profile            Profile?
+  journey            Journey?
+  documents          Document[]
+  notifications      Notification[]
+  stepProgressions   StepProgression[]
+
+  @@map("users")
+}
+
+// ── 2. Profil ────────────────────────────────────────
+model Profile {
+  id          Int      @id @default(autoincrement())
+  statut      Statut
+  nationalite String
+  dateArrivee DateTime
+  logement    Logement
+  banque      Banque
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relation 1-1 avec User
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+// ── 3. Parcours administratif ────────────────────────
+model Journey {
+  id          Int      @id @default(autoincrement())
+  progression Int      @default(0) // % de complétion
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relation 1-1 avec User
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("journeys")
+}
+
+// ── 4. Démarche (Step) ──────────────────────────────
+// Contenu géré via Notion → synchronisé en BDD
+model Step {
+  id           Int      @id @default(autoincrement())
+  titre        String
+  description  String
+  organisme    String
+  delai        String
+  lienOfficiel String
+  priorite     Priorite
+  actif        Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Profils concernés (ex: ["etudiant", "salarie"])
+  profils      String[]
+
+  // Relations
+  etapes           Etape[]
+  documents        Document[]
+  stepProgressions StepProgression[]
+  dependances      StepDependance[] @relation("StepDependances")
+  requitPar        StepDependance[] @relation("StepRequis")
+
+  @@map("steps")
+}
+
+// ── 5. Dépendances entre démarches ──────────────────
+// Ex : Compte bancaire dépend de CPAM
+model StepDependance {
+  stepId    Int
+  requitId  Int
+
+  step   Step @relation("StepDependances", fields: [stepId],   references: [id])
+  requit Step @relation("StepRequis",      fields: [requitId], references: [id])
+
+  @@id([stepId, requitId])
+  @@map("step_dependances")
+}
+
+// ── 6. Étape d'une démarche ─────────────────────────
+model Etape {
+  id     Int    @id @default(autoincrement())
+  nom    String
+  ordre  Int    // ordre d'affichage
+
+  // Relation avec Step
+  stepId Int
+  step   Step @relation(fields: [stepId], references: [id], onDelete: Cascade)
+
+  // Relation avec progression
+  etapeProgressions EtapeProgression[]
+
+  @@map("etapes")
+}
+
+// ── 7. Progression d'une démarche par utilisateur ───
+// Classe-association UML : Utilisateur ↔ Démarche
+model StepProgression {
+  id        Int          @id @default(autoincrement())
+  statut    StatutStep   @default(A_FAIRE)
+  updatedAt DateTime     @updatedAt
+
+  userId Int
+  stepId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  step   Step @relation(fields: [stepId], references: [id], onDelete: Cascade)
+
+  etapeProgressions EtapeProgression[]
+
+  @@unique([userId, stepId])
+  @@map("step_progressions")
+}
+
+// ── 8. Progression d'une étape par utilisateur ──────
+model EtapeProgression {
+  id      Int        @id @default(autoincrement())
+  statut  StatutStep @default(A_FAIRE)
+
+  etapeId           Int
+  stepProgressionId Int
+  etape             Etape           @relation(fields: [etapeId],           references: [id], onDelete: Cascade)
+  stepProgression   StepProgression @relation(fields: [stepProgressionId], references: [id], onDelete: Cascade)
+
+  @@unique([etapeId, stepProgressionId])
+  @@map("etape_progressions")
+}
+
+// ── 9. Document ──────────────────────────────────────
+model Document {
+  id        Int            @id @default(autoincrement())
+  nom       String
+  chemin    String?        // path du fichier uploadé
+  taille    Int?           // en octets
+  mimeType  String?
+  statut    StatutDocument @default(MANQUANT)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  // Relations
+  userId Int
+  stepId Int?
+  user   User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  step   Step? @relation(fields: [stepId], references: [id], onDelete: SetNull)
+
+  @@map("documents")
+}
+
+// ── 10. Notification ─────────────────────────────────
+model Notification {
+  id        Int              @id @default(autoincrement())
+  message   String
+  type      TypeNotification @default(INFO)
+  lu        Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  // Relation avec User
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// ══════════════════════════════════════════════════════
+// ENUMS
+// ══════════════════════════════════════════════════════
+
+enum Statut {
+  ETUDIANT
+  SALARIE
+  AU_PAIR
+  RESIDENT
+  PROFESSIONNEL
+}
+
+enum Logement {
+  HEBERGE
+  LOCATAIRE
+  PROPRIETAIRE
+}
+
+enum Banque {
+  COMPTE_FR
+  COMPTE_ETRANGER
+  AUCUN
+}
+
+enum Priorite {
+  URGENTE
+  IMPORTANTE
+  OPTIONNELLE
+}
+
+enum StatutStep {
+  A_FAIRE
+  EN_COURS
+  TERMINE
+  BLOQUE
+}
+
+enum StatutDocument {
+  MANQUANT
+  FOURNI
+  EXPIRE
+}
+
+enum TypeNotification {
+  INFO
+  URGENT
+  DOCUMENT
+}
