@@ -162,15 +162,26 @@ export default function DemarcheDetail() {
           <div className="card p-6">
             <h2 className="font-semibold text-navy mb-4">Documents nécessaires</h2>
             <div className="flex flex-col gap-2.5">
-              {demarche.step?.documents?.length > 0
-                ? demarche.step.documents.map(doc => (
-                    <div key={doc.id} className="flex items-center gap-2.5 p-2.5 rounded-lg bg-app-bg">
+
+            {(() => {
+              const DOCS = {
+                'Titre de séjour':         ["Passeport en cours de validité", "Visa long séjour", "Justificatif de domicile", "Photos d'identité", "Formulaire CERFA"],
+                'Sécurité sociale (CPAM)': ["Titre de séjour", "RIB français", "Justificatif d'identité", "Justificatif de domicile"],
+                'Compte bancaire':         ["Titre de séjour", "Justificatif de domicile", "RIB étranger ou argent liquide"],
+                'CAF – Aide au logement':  ["RIB français", "Contrat de bail signé", "Avis d'imposition", "Titre de séjour"],
+                'Mutuelle santé':          ["Numéro de Sécurité sociale", "RIB français"],
+                'Inscription Pôle emploi': ["Titre de séjour", "CV à jour", "Attestation employeur"],
+              }
+              const docs = DOCS[demarche.titre] ?? []
+              return docs.length === 0
+                ? <p className="text-xs text-muted font-light">Aucun document spécifique requis.</p>
+                : docs.map((doc, i) => (
+                    <div key={i} className="flex items-center gap-2.5 p-2.5 rounded-lg bg-app-bg">
                       <FileText size={15} className="text-slate flex-shrink-0" />
-                      <span className="text-xs font-medium text-slate">{doc.nom}</span>
+                      <span className="text-xs font-medium text-slate">{doc}</span>
                     </div>
                   ))
-                : <p className="text-xs text-muted font-light">Aucun document spécifique requis.</p>
-              }
+            })()}
             </div>
             <Link to="/app/documents" className="mt-5 w-full btn-outline text-xs flex items-center justify-center gap-1.5">
               Gérer mes documents
