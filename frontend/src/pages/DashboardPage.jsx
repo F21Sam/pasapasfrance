@@ -42,7 +42,19 @@ export default function DashboardPage() {
           notificationAPI.getNotifications(),
         ])
         setJourney(journeyRes.data.journey)
-        setDemarches(journeyRes.data.demarches ?? [])
+        const raw = journeyRes.data.demarches ?? []
+        const flat = raw.map(d => ({
+          id:          d.step?.id ?? d.id,
+          titre:       d.step?.titre ?? d.titre,
+          priorite:    d.step?.priorite ?? d.priorite,
+          statut:      d.statut,
+          progression: d.etapeProgressions
+            ? Math.round((d.etapeProgressions.filter(e => e.statut === 'TERMINE').length / (d.etapeProgressions.length || 1)) * 100)
+            : 0,
+          organisme:   d.step?.organisme ?? d.organisme,
+          delai:       d.step?.delai ?? d.delai,
+        }))
+        setDemarches(flat)
         setNotifications(notifRes.data ?? [])
       } catch (err) {
         console.error(err)
