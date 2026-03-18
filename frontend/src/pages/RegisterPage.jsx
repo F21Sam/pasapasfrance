@@ -14,16 +14,26 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
     if (!form.prenom || !form.email || !form.password) {
-      setError('Veuillez remplir tous les champs.'); return
+      setError('Veuillez remplir tous les champs.')
+      return
     }
     if (form.password.length < 8) {
-      setError('Le mot de passe doit contenir au moins 8 caractères.'); return
+      setError('Le mot de passe doit contenir au moins 8 caractères.')
+      return
     }
+
     setLoading(true)
-    await new Promise(r => setTimeout(r, 800))
-    register({ email: form.email, prenom: form.prenom })
-    navigate('/onboarding')
+    try {
+      await register({ prenom: form.prenom, email: form.email, password: form.password })
+      // Après inscription → onboarding pour créer le profil
+      navigate('/onboarding')
+    } catch (err) {
+      setError(err.response?.data?.error || 'Une erreur est survenue. Veuillez réessayer.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -43,9 +53,8 @@ export default function RegisterPage() {
               <em className="italic text-gradient">parcours aujourd'hui.</em>
             </h2>
             <p className="text-white/55 font-light leading-relaxed text-[.95rem]">
-              Créez votre profil en 2 minutes et obtenez une liste personnalisée de toutes vos démarches, dans le bon ordre.
+              Créez votre profil en 2 minutes et obtenez une liste personnalisée de toutes vos démarches.
             </p>
-            {/* Mini feature list */}
             {['Parcours généré en 2 min', 'Démarches ordonnées avec dépendances', 'Rappels et alertes automatiques'].map(f => (
               <div key={f} className="flex items-center gap-3 text-white/70 text-sm">
                 <span className="w-5 h-5 rounded-full bg-success/20 flex items-center justify-center text-green-400 text-xs font-bold flex-shrink-0">✓</span>
@@ -62,8 +71,7 @@ export default function RegisterPage() {
         <div className="w-full max-w-md">
 
           <Link to="/" className="inline-flex items-center gap-2 text-slate text-sm hover:text-navy mb-8 transition-colors">
-            <ArrowLeft size={15} />
-            Retour à l'accueil
+            <ArrowLeft size={15} /> Retour à l'accueil
           </Link>
 
           <div className="lg:hidden mb-8">
@@ -91,6 +99,7 @@ export default function RegisterPage() {
                 className="input"
                 value={form.prenom}
                 onChange={e => setForm(f => ({ ...f, prenom: e.target.value }))}
+                disabled={loading}
               />
             </div>
             <div>
@@ -101,6 +110,7 @@ export default function RegisterPage() {
                 className="input"
                 value={form.email}
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                disabled={loading}
               />
             </div>
             <div>
@@ -112,12 +122,14 @@ export default function RegisterPage() {
                   className="input pr-11"
                   value={form.password}
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                  disabled={loading}
                 />
                 <button type="button" onClick={() => setShowPwd(!showPwd)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-navy transition-colors">
                   {showPwd ? <EyeOff size={17} /> : <Eye size={17} />}
                 </button>
               </div>
+              {/* Indicateur force mot de passe */}
               {form.password && (
                 <div className="mt-2 flex gap-1">
                   {[1,2,3,4].map(i => (
@@ -134,19 +146,18 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full mt-2 flex items-center justify-center gap-2 disabled:opacity-60"
+              className="btn-primary w-full mt-2 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading
                 ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                : 'Créer mon compte →'}
+                : 'Créer mon compte →'
+              }
             </button>
           </form>
 
           <p className="text-xs text-muted text-center mt-5 leading-relaxed">
             En créant un compte, vous acceptez nos{' '}
-            <a href="#" className="text-vivid hover:underline">conditions d'utilisation</a>
-            {' '}et notre{' '}
-            <a href="#" className="text-vivid hover:underline">politique de confidentialité</a>.
+            <a href="#" className="text-vivid hover:underline">conditions d'utilisation</a>.
           </p>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowRight, ArrowLeft, Check } from 'lucide-react'
 import { PROFILS } from '@/utils/mockData'
 import { useAuth } from '@/context/AuthContext'
+import { userAPI, journeyAPI } from '@/services/api'
 
 const PAYS = ['Afghanistan','Algérie','Allemagne','Argentine','Belgique','Brésil','Canada',
   'Chine','Colombie','Côte d\'Ivoire','Espagne','États-Unis','Inde','Italie','Japon',
@@ -10,19 +11,21 @@ const PAYS = ['Afghanistan','Algérie','Allemagne','Argentine','Belgique','Brés
   'Tunisie','Turquie','Ukraine','Vietnam']
 
 const STEPS = [
-  { id: 1, title: 'Votre statut', subtitle: 'Quelle est votre situation principale ?' },
-  { id: 2, title: 'Votre profil', subtitle: 'Quelques infos pour personnaliser votre parcours.' },
+  { id: 1, title: 'Votre statut',    subtitle: 'Quelle est votre situation principale ?' },
+  { id: 2, title: 'Votre profil',    subtitle: 'Quelques infos pour personnaliser votre parcours.' },
   { id: 3, title: 'Votre situation', subtitle: 'Dernières précisions pour affiner vos démarches.' },
 ]
 
 export default function OnboardingPage() {
-  const [step, setStep]   = useState(1)
-  const [form, setForm]   = useState({
+  const [step, setStep]     = useState(1)
+  const [loading, setLoading] = useState(false)
+  const [error, setError]   = useState('')
+  const [form, setForm]     = useState({
     statut: '', nationalite: '', dateArrivee: '',
     logement: '', banque: '', langue: 'fr',
   })
-  const { user, login }   = useAuth()
-  const navigate          = useNavigate()
+  const { updateUser, user } = useAuth()
+  const navigate             = useNavigate()
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
@@ -32,9 +35,38 @@ export default function OnboardingPage() {
     return !!form.logement && !!form.banque
   }
 
-  const handleFinish = () => {
-    login({ ...user, profil: form })
-    navigate('/app/dashboard')
+  const handleFinish = async () => {
+    setError('')
+    setLoading(true)
+    try {
+      // 1. Sauvegarder le profil
+      await userAPI.updateMe({
+        langue:      form.langue,
+        statut:      form.statut,
+        nationalite: form.nationalite,
+        dateArrivee: form.dateArrivee,
+        logement:    form.logement,
+        banque:      form.banque,
+      })
+
+      // 2. Générer le parcours
+      await journeyAPI.generate({
+        statut:      form.statut,
+        nationalite: form.nationalite,
+        logement:    form.logement,
+        banque:      form.banque,
+      })
+
+      // 3. Mettre à jour le contexte
+      updateUser({ ...user, profil: form })
+
+      // 4. Rediriger vers le dashboard
+      navigate('/app/dashboard')
+    } catch (err) {
+      setError(err.response?.data?.error || 'Une erreur est survenue. Veuillez réessayer.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -47,9 +79,8 @@ export default function OnboardingPage() {
           {STEPS.map(s => (
             <div key={s.id} className="flex items-center gap-2">
               <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                s.id < step  ? 'bg-success text-white' :
-                s.id === step ? 'bg-navy text-white' :
-                'bg-border text-muted'
+                s.id < step   ? 'bg-success text-white' :
+                s.id === step ? 'bg-navy text-white'    : 'bg-border text-muted'
               }`}>
                 {s.id < step ? <Check size={13} /> : s.id}
               </div>
@@ -71,26 +102,29 @@ export default function OnboardingPage() {
             <p className="text-muted font-light">{STEPS[step-1].subtitle}</p>
           </div>
 
-          {/* ── Step 1: Statut ── */}
+          {error && (
+            <div className="bg-warning-light border border-warning/30 text-warning text-sm rounded-xl px-4 py-3 mb-5">
+              {error}
+            </div>
+          )}
+
+          {/* Step 1 — Statut */}
           {step === 1 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {PROFILS.map(p => (
-                <button
-                  key={p.value}
-                  onClick={() => set('statut', p.value)}
+                <button key={p.value} onClick={() => set('statut', p.value.toUpperCase())}
                   className={`flex items-center gap-4 px-5 py-4 rounded-2xl border-2 text-left transition-all ${
-                    form.statut === p.value
+                    form.statut === p.value.toUpperCase()
                       ? 'border-navy bg-pale'
                       : 'border-border bg-white hover:border-navy/40'
-                  }`}
-                >
+                  }`}>
                   <span className="text-2xl">{p.emoji}</span>
                   <div>
-                    <p className={`font-semibold text-sm ${form.statut === p.value ? 'text-navy' : 'text-text'}`}>
+                    <p className={`font-semibold text-sm ${form.statut === p.value.toUpperCase() ? 'text-navy' : 'text-text'}`}>
                       {p.label}
                     </p>
                   </div>
-                  {form.statut === p.value && (
+                  {form.statut === p.value.toUpperCase() && (
                     <div className="ml-auto w-5 h-5 rounded-full bg-navy flex items-center justify-center flex-shrink-0">
                       <Check size={11} className="text-white" />
                     </div>
@@ -100,40 +134,30 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* ── Step 2: Nationalité + date ── */}
+          {/* Step 2 — Nationalité + date */}
           {step === 2 && (
             <div className="flex flex-col gap-5 bg-white rounded-2xl border border-border p-6">
               <div>
                 <label className="label">Nationalité</label>
-                <select
-                  className="input"
-                  value={form.nationalite}
-                  onChange={e => set('nationalite', e.target.value)}
-                >
+                <select className="input" value={form.nationalite}
+                  onChange={e => set('nationalite', e.target.value)}>
                   <option value="">Sélectionner un pays</option>
                   {PAYS.map(p => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
               <div>
                 <label className="label">Date d'arrivée en France</label>
-                <input
-                  type="date"
-                  className="input"
-                  value={form.dateArrivee}
-                  onChange={e => set('dateArrivee', e.target.value)}
-                />
+                <input type="date" className="input" value={form.dateArrivee}
+                  onChange={e => set('dateArrivee', e.target.value)} />
               </div>
               <div>
                 <label className="label">Langue préférée</label>
                 <div className="flex gap-3">
                   {[{v:'fr',l:'🇫🇷 Français'},{v:'en',l:'🇬🇧 English'}].map(lng => (
-                    <button
-                      key={lng.v}
-                      onClick={() => set('langue', lng.v)}
+                    <button key={lng.v} onClick={() => set('langue', lng.v)}
                       className={`flex-1 py-3 rounded-xl border-2 text-sm font-medium transition-all ${
                         form.langue === lng.v ? 'border-navy bg-pale text-navy' : 'border-border bg-white text-slate'
-                      }`}
-                    >
+                      }`}>
                       {lng.l}
                     </button>
                   ))}
@@ -142,24 +166,17 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* ── Step 3: Situation ── */}
+          {/* Step 3 — Situation */}
           {step === 3 && (
             <div className="flex flex-col gap-5 bg-white rounded-2xl border border-border p-6">
               <div>
                 <label className="label">Situation de logement</label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-1">
-                  {[
-                    { v:'heberge',  l:'Hébergé(e)' },
-                    { v:'locataire',l:'Locataire' },
-                    { v:'proprio',  l:'Propriétaire' },
-                  ].map(opt => (
-                    <button
-                      key={opt.v}
-                      onClick={() => set('logement', opt.v)}
+                <div className="grid grid-cols-3 gap-2.5 mt-1">
+                  {[{v:'HEBERGE',l:'Hébergé(e)'},{v:'LOCATAIRE',l:'Locataire'},{v:'PROPRIETAIRE',l:'Propriétaire'}].map(opt => (
+                    <button key={opt.v} onClick={() => set('logement', opt.v)}
                       className={`py-3 rounded-xl border-2 text-sm font-medium transition-all ${
                         form.logement === opt.v ? 'border-navy bg-pale text-navy' : 'border-border text-slate hover:border-navy/40'
-                      }`}
-                    >
+                      }`}>
                       {opt.l}
                     </button>
                   ))}
@@ -167,19 +184,12 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <label className="label">Situation bancaire</label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-1">
-                  {[
-                    { v:'compte_fr', l:'Compte FR' },
-                    { v:'etranger',  l:'Compte étranger' },
-                    { v:'aucun',     l:'Sans compte' },
-                  ].map(opt => (
-                    <button
-                      key={opt.v}
-                      onClick={() => set('banque', opt.v)}
+                <div className="grid grid-cols-3 gap-2.5 mt-1">
+                  {[{v:'COMPTE_FR',l:'Compte FR'},{v:'COMPTE_ETRANGER',l:'Compte étranger'},{v:'AUCUN',l:'Sans compte'}].map(opt => (
+                    <button key={opt.v} onClick={() => set('banque', opt.v)}
                       className={`py-3 rounded-xl border-2 text-sm font-medium transition-all ${
                         form.banque === opt.v ? 'border-navy bg-pale text-navy' : 'border-border text-slate hover:border-navy/40'
-                      }`}
-                    >
+                      }`}>
                       {opt.l}
                     </button>
                   ))}
@@ -190,28 +200,23 @@ export default function OnboardingPage() {
 
           {/* Navigation */}
           <div className="flex items-center justify-between mt-8">
-            <button
-              onClick={() => setStep(s => s - 1)}
-              className={`flex items-center gap-2 text-sm text-slate hover:text-navy transition-colors ${step === 1 ? 'invisible' : ''}`}
-            >
+            <button onClick={() => setStep(s => s - 1)}
+              className={`flex items-center gap-2 text-sm text-slate hover:text-navy transition-colors ${step === 1 ? 'invisible' : ''}`}>
               <ArrowLeft size={15} /> Précédent
             </button>
 
             {step < STEPS.length ? (
-              <button
-                onClick={() => setStep(s => s + 1)}
-                disabled={!canNext()}
-                className="btn-primary flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
+              <button onClick={() => setStep(s => s + 1)} disabled={!canNext()}
+                className="btn-primary flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
                 Continuer <ArrowRight size={15} />
               </button>
             ) : (
-              <button
-                onClick={handleFinish}
-                disabled={!canNext()}
-                className="btn-primary flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                Générer mon parcours ✦
+              <button onClick={handleFinish} disabled={!canNext() || loading}
+                className="btn-primary flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
+                {loading
+                  ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  : 'Générer mon parcours ✦'
+                }
               </button>
             )}
           </div>

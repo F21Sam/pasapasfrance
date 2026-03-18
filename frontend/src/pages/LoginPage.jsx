@@ -14,12 +14,27 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    if (!form.email || !form.password) { setError('Veuillez remplir tous les champs.'); return }
+
+    if (!form.email || !form.password) {
+      setError('Veuillez remplir tous les champs.')
+      return
+    }
+
     setLoading(true)
-    // Mock auth — replace with real API call
-    await new Promise(r => setTimeout(r, 800))
-    login({ email: form.email, prenom: 'Utilisateur' })
-    navigate('/app/dashboard')
+    try {
+      const user = await login({ email: form.email, password: form.password })
+
+      // Rediriger selon si le profil est complété ou non
+      if (!user.profile) {
+        navigate('/onboarding')
+      } else {
+        navigate('/app/dashboard')
+      }
+    } catch (err) {
+      setError(err.response?.data?.error || 'Email ou mot de passe incorrect.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -51,8 +66,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
 
           <Link to="/" className="inline-flex items-center gap-2 text-slate text-sm hover:text-navy mb-8 transition-colors">
-            <ArrowLeft size={15} />
-            Retour à l'accueil
+            <ArrowLeft size={15} /> Retour à l'accueil
           </Link>
 
           <div className="lg:hidden mb-8">
@@ -80,15 +94,13 @@ export default function LoginPage() {
                 className="input"
                 value={form.email}
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                disabled={loading}
               />
             </div>
 
             <div>
               <div className="flex justify-between items-center mb-1.5">
                 <label className="label mb-0">Mot de passe</label>
-                <Link to="/forgot-password" className="text-xs text-vivid hover:underline">
-                  Mot de passe oublié ?
-                </Link>
               </div>
               <div className="relative">
                 <input
@@ -97,6 +109,7 @@ export default function LoginPage() {
                   className="input pr-11"
                   value={form.password}
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                  disabled={loading}
                 />
                 <button
                   type="button"
@@ -113,9 +126,10 @@ export default function LoginPage() {
               disabled={loading}
               className="btn-primary w-full mt-2 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {loading ? (
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : 'Se connecter'}
+              {loading
+                ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                : 'Se connecter'
+              }
             </button>
           </form>
         </div>
