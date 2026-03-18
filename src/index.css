@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background-color: #F5F7FA;
+    color: #1A2733;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  /* ── Buttons ── */
+  .btn-primary {
+    @apply bg-vivid text-white px-8 py-3.5 rounded-pill font-semibold text-sm
+           transition-all duration-200 shadow-vivid border-none cursor-pointer
+           hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0;
+  }
+  .btn-ghost {
+    @apply bg-white/10 text-white px-7 py-3.5 rounded-pill font-medium text-sm
+           border border-white/20 cursor-pointer transition-all duration-200
+           hover:bg-white/20;
+  }
+  .btn-navy {
+    @apply bg-navy text-white px-7 py-3 rounded-pill font-semibold text-sm
+           border-none cursor-pointer transition-all duration-200
+           hover:bg-navy-light;
+  }
+  .btn-white {
+    @apply bg-white text-navy px-9 py-4 rounded-pill font-bold text-sm
+           border-none cursor-pointer transition-all duration-200
+           shadow-float hover:-translate-y-0.5;
+  }
+  .btn-outline {
+    @apply bg-transparent text-navy px-7 py-3.5 rounded-pill font-medium text-sm
+           border border-border cursor-pointer transition-all duration-200
+           hover:border-navy hover:bg-pale;
+  }
+
+  /* ── Cards ── */
+  .card {
+    @apply bg-white rounded-2xl border border-border shadow-card
+           transition-all duration-200 hover:-translate-y-1 hover:shadow-float;
+  }
+
+  /* ── Badges ── */
+  .badge-success { @apply bg-success-light text-success text-xs font-semibold px-2.5 py-1 rounded-pill; }
+  .badge-warning { @apply bg-warning-light text-warning text-xs font-semibold px-2.5 py-1 rounded-pill; }
+  .badge-muted   { @apply bg-app-bg text-muted text-xs font-semibold px-2.5 py-1 rounded-pill; }
+  .badge-navy    { @apply bg-pale text-navy text-xs font-semibold px-2.5 py-1 rounded-pill; }
+
+  /* ── Section eyebrow ── */
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-vivid text-xs font-bold tracking-widest uppercase mb-4;
+  }
+  .eyebrow::before {
+    content: '';
+    @apply block w-5 h-0.5 bg-vivid;
+  }
+
+  /* ── Section layout ── */
+  .section-inner { @apply max-w-6xl mx-auto; }
+  .sec-title { @apply font-serif text-navy leading-tight tracking-tight; }
+  .sec-body  { @apply text-slate font-light leading-relaxed; }
+
+  /* ── Nav link ── */
+  .nav-link {
+    @apply text-slate text-sm font-medium transition-colors duration-200 hover:text-navy;
+  }
+
+  /* ── Input ── */
+  .input {
+    @apply w-full px-4 py-3 rounded-xl border border-border bg-white
+           text-sm font-normal text-gray-800 placeholder-muted
+           outline-none transition-all duration-200
+           focus:border-vivid focus:ring-2 focus:ring-vivid/20;
+  }
+  .label { @apply block text-sm font-medium text-navy mb-1.5; }
+
+  /* ── Progress bar ── */
+  .progress-bar {
+    @apply h-2 rounded-pill bg-border overflow-hidden;
+  }
+  .progress-fill {
+    @apply h-full rounded-pill bg-gradient-to-r from-vivid to-blue-400
+           transition-all duration-1000 ease-out;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium
+           text-slate transition-all duration-150
+           hover:bg-pale hover:text-navy;
+  }
+  .sidebar-link.active {
+    @apply bg-pale text-navy font-semibold;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(90deg, #90CAF9, #42A5F5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .grid-dots {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+}
