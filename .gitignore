@@ -1,17 +1,30 @@
-# Dependencies
+# ── Dépendances ──
 node_modules/
+**/node_modules/
 
-# Env files
+# ── Variables d'environnement ──
 .env
+**/.env
 *.env
 
-# Uploads
+# ── Uploads ──
 backend/uploads/
 
-# Build
+# ── Build ──
 frontend/dist/
 backend/dist/
 
-# OS
+# ── Docker ──
+.docker/
+
+# ── OS ──
 .DS_Store
 Thumbs.db
+
+# ── IDE ──
+.vscode/
+.idea/
+
+# ── Logs ──
+*.log
+npm-debug.log*

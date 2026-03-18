@@ -1,0 +1,120 @@
+version: '3.8'
+
+services:
+
+  # ── PostgreSQL ─────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: ppf_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER:-ppf_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ppf_password}
+      POSTGRES_DB:       ${POSTGRES_DB:-pasapasfrance}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ppf_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ppf_network
+
+  # ── Backend Node.js / Express ──────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ppf_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL:           postgresql://${POSTGRES_USER:-ppf_user}:${POSTGRES_PASSWORD:-ppf_password}@postgres:5432/${POSTGRES_DB:-pasapasfrance}
+      JWT_SECRET:             ${JWT_SECRET:-change_me_in_production}
+      JWT_EXPIRES_IN:         ${JWT_EXPIRES_IN:-1h}
+      JWT_REFRESH_SECRET:     ${JWT_REFRESH_SECRET:-change_me_refresh}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      FRONTEND_URL:           ${FRONTEND_URL:-http://localhost:5173}
+      PORT:                   3000
+      NODE_ENV:               ${NODE_ENV:-development}
+      N8N_WEBHOOK_URL:        http://n8n:5678
+    volumes:
+      - ./backend/uploads:/app/uploads
+    ports:
+      - "3000:3000"
+    networks:
+      - ppf_network
+
+  # ── Frontend React / Vite ──────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ppf_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: http://localhost:3000/api
+    ports:
+      - "5173:5173"
+    networks:
+      - ppf_network
+
+  # ── n8n (automatisation emails / rappels) ──────────
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: ppf_n8n
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Base de données n8n (utilise la même PostgreSQL)
+      DB_TYPE:               postgresdb
+      DB_POSTGRESDB_HOST:    postgres
+      DB_POSTGRESDB_PORT:    5432
+      DB_POSTGRESDB_DATABASE:${POSTGRES_DB:-pasapasfrance}
+      DB_POSTGRESDB_USER:    ${POSTGRES_USER:-ppf_user}
+      DB_POSTGRESDB_PASSWORD:${POSTGRES_PASSWORD:-ppf_password}
+      DB_POSTGRESDB_SCHEMA:  n8n
+      # Sécurité
+      N8N_BASIC_AUTH_ACTIVE: true
+      N8N_BASIC_AUTH_USER:   ${N8N_USER:-admin}
+      N8N_BASIC_AUTH_PASSWORD:${N8N_PASSWORD:-admin123}
+      # URL publique
+      N8N_HOST:              localhost
+      N8N_PORT:              5678
+      N8N_PROTOCOL:          http
+      WEBHOOK_URL:           http://localhost:5678/
+      # Email (SMTP)
+      N8N_EMAIL_MODE:        smtp
+      N8N_SMTP_HOST:         ${SMTP_HOST:-smtp.gmail.com}
+      N8N_SMTP_PORT:         ${SMTP_PORT:-587}
+      N8N_SMTP_USER:         ${SMTP_USER}
+      N8N_SMTP_PASS:         ${SMTP_PASS}
+      N8N_SMTP_SENDER:       ${SMTP_SENDER:-noreply@pasapasfrance.fr}
+      # API PasàPasFrance
+      PPF_API_URL:           http://backend:3000/api
+      PPF_API_SECRET:        ${N8N_API_SECRET:-secret_n8n}
+    volumes:
+      - n8n_data:/home/node/.n8n
+    ports:
+      - "5678:5678"
+    networks:
+      - ppf_network
+
+# ── Volumes persistants ────────────────────────────
+volumes:
+  postgres_data:
+  n8n_data:
+
+# ── Réseau interne ─────────────────────────────────
+networks:
+  ppf_network:
+    driver: bridge
