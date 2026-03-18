@@ -2,37 +2,47 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { User, Mail, Globe, LogOut, Save, Check } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
+import { userAPI } from '@/services/api'
 import { PROFILS } from '@/utils/mockData'
 
 export default function ProfilePage() {
-  const { user, login, logout } = useAuth()
+  const { user, updateUser, logout } = useAuth()
   const navigate = useNavigate()
-  const [saved, setSaved] = useState(false)
-  const [form, setForm] = useState({
-    prenom:     user?.prenom    ?? '',
-    email:      user?.email     ?? '',
-    statut:     user?.profil?.statut      ?? '',
-    nationalite:user?.profil?.nationalite ?? '',
-    langue:     user?.profil?.langue      ?? 'fr',
-    logement:   user?.profil?.logement    ?? '',
-    banque:     user?.profil?.banque      ?? '',
+  const [saved, setSaved]   = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError]   = useState('')
+  const [form, setForm]     = useState({
+    prenom:      user?.prenom    ?? '',
+    email:       user?.email     ?? '',
+    statut:      user?.profile?.statut      ?? '',
+    nationalite: user?.profile?.nationalite ?? '',
+    langue:      user?.langue               ?? 'fr',
+    logement:    user?.profile?.logement    ?? '',
+    banque:      user?.profile?.banque      ?? '',
   })
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
   const handleSave = async (e) => {
     e.preventDefault()
-    await new Promise(r => setTimeout(r, 600))
-    login({ ...user, prenom: form.prenom, email: form.email, profil: form })
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2500)
+    setError('')
+    setLoading(true)
+    try {
+      const res = await userAPI.updateMe(form)
+      updateUser({ ...user, prenom: form.prenom, profile: res.data.profile ?? user.profile })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
+    } catch (err) {
+      setError(err.response?.data?.error || 'Erreur lors de la sauvegarde.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleLogout = () => { logout(); navigate('/') }
 
   return (
     <div className="p-8 max-w-2xl">
-
       <div className="mb-8">
         <h1 className="font-serif text-navy text-3xl mb-1">Mon profil</h1>
         <p className="text-muted text-sm font-light">Modifiez vos informations pour affiner votre parcours.</p>
@@ -47,10 +57,16 @@ export default function ProfilePage() {
           <p className="font-semibold text-navy">{form.prenom || 'Utilisateur'}</p>
           <p className="text-xs text-muted">{form.email || '—'}</p>
           <p className="text-xs text-vivid mt-0.5">
-            {PROFILS.find(p => p.value === form.statut)?.label ?? 'Profil non défini'}
+            {PROFILS.find(p => p.value === form.statut?.toLowerCase())?.label ?? 'Profil non défini'}
           </p>
         </div>
       </div>
+
+      {error && (
+        <div className="bg-warning-light border border-warning/30 text-warning text-sm rounded-xl px-4 py-3 mb-5">
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleSave} className="flex flex-col gap-6">
 
@@ -68,7 +84,7 @@ export default function ProfilePage() {
             <div>
               <label className="label flex items-center gap-1.5"><Mail size={13} /> Email</label>
               <input type="email" className="input" value={form.email}
-                onChange={e => set('email', e.target.value)} />
+                onChange={e => set('email', e.target.value)} disabled />
             </div>
           </div>
         </div>
@@ -83,9 +99,12 @@ export default function ProfilePage() {
               <label className="label">Statut</label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {PROFILS.map(p => (
-                  <button key={p.value} type="button" onClick={() => set('statut', p.value)}
+                  <button key={p.value} type="button"
+                    onClick={() => set('statut', p.value.toUpperCase())}
                     className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border-2 text-left transition-all text-sm ${
-                      form.statut === p.value ? 'border-navy bg-pale text-navy' : 'border-border text-slate hover:border-navy/40'
+                      form.statut === p.value.toUpperCase()
+                        ? 'border-navy bg-pale text-navy'
+                        : 'border-border text-slate hover:border-navy/40'
                     }`}>
                     <span>{p.emoji}</span>
                     <span className="text-xs font-medium truncate">{p.label}</span>
@@ -97,20 +116,22 @@ export default function ProfilePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="label">Situation logement</label>
-                <select className="input" value={form.logement} onChange={e => set('logement', e.target.value)}>
+                <select className="input" value={form.logement}
+                  onChange={e => set('logement', e.target.value)}>
                   <option value="">Sélectionner</option>
-                  <option value="heberge">Hébergé(e)</option>
-                  <option value="locataire">Locataire</option>
-                  <option value="proprio">Propriétaire</option>
+                  <option value="HEBERGE">Hébergé(e)</option>
+                  <option value="LOCATAIRE">Locataire</option>
+                  <option value="PROPRIETAIRE">Propriétaire</option>
                 </select>
               </div>
               <div>
                 <label className="label">Situation bancaire</label>
-                <select className="input" value={form.banque} onChange={e => set('banque', e.target.value)}>
+                <select className="input" value={form.banque}
+                  onChange={e => set('banque', e.target.value)}>
                   <option value="">Sélectionner</option>
-                  <option value="compte_fr">Compte en France</option>
-                  <option value="etranger">Compte étranger</option>
-                  <option value="aucun">Sans compte</option>
+                  <option value="COMPTE_FR">Compte en France</option>
+                  <option value="COMPTE_ETRANGER">Compte étranger</option>
+                  <option value="AUCUN">Sans compte</option>
                 </select>
               </div>
             </div>
@@ -133,19 +154,20 @@ export default function ProfilePage() {
 
         {/* Actions */}
         <div className="flex items-center justify-between gap-4">
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex items-center gap-2 text-sm text-slate hover:text-red-500 transition-colors"
-          >
+          <button type="button" onClick={handleLogout}
+            className="flex items-center gap-2 text-sm text-slate hover:text-red-500 transition-colors">
             <LogOut size={15} /> Se déconnecter
           </button>
-
-          <button type="submit"
-            className={`flex items-center gap-2 px-6 py-3 rounded-pill font-semibold text-sm transition-all ${
+          <button type="submit" disabled={loading}
+            className={`flex items-center gap-2 px-6 py-3 rounded-pill font-semibold text-sm transition-all disabled:opacity-60 ${
               saved ? 'bg-success text-white' : 'btn-primary'
             }`}>
-            {saved ? <><Check size={15} /> Sauvegardé !</> : <><Save size={15} /> Enregistrer</>}
+            {loading
+              ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              : saved
+                ? <><Check size={15} /> Sauvegardé !</>
+                : <><Save size={15} /> Enregistrer</>
+            }
           </button>
         </div>
       </form>
