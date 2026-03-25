@@ -6,8 +6,7 @@
   html { scroll-behavior: smooth; }
   body {
     font-family: 'DM Sans', system-ui, sans-serif;
-    background-color: #F5F7FA;
-    color: #1A2733;
+    @apply bg-app-bg dark:bg-gray-950 text-gray-900 dark:text-gray-100;
     -webkit-font-smoothing: antialiased;
   }
 }
@@ -35,68 +34,62 @@
            shadow-float hover:-translate-y-0.5;
   }
   .btn-outline {
-    @apply bg-transparent text-navy px-7 py-3.5 rounded-pill font-medium text-sm
-           border border-border cursor-pointer transition-all duration-200
-           hover:border-navy hover:bg-pale;
+    @apply bg-transparent text-navy dark:text-gray-200 px-7 py-3.5 rounded-pill font-medium text-sm
+           border border-border dark:border-gray-700 cursor-pointer transition-all duration-200
+           hover:border-navy hover:bg-pale dark:hover:bg-gray-800;
   }
 
   /* ── Cards ── */
   .card {
-    @apply bg-white rounded-2xl border border-border shadow-card
-           transition-all duration-200 hover:-translate-y-1 hover:shadow-float;
+    @apply bg-white dark:bg-gray-900 rounded-2xl border border-border dark:border-gray-800
+           shadow-card transition-all duration-200 hover:-translate-y-1 hover:shadow-float;
   }
 
   /* ── Badges ── */
   .badge-success { @apply bg-success-light text-success text-xs font-semibold px-2.5 py-1 rounded-pill; }
   .badge-warning { @apply bg-warning-light text-warning text-xs font-semibold px-2.5 py-1 rounded-pill; }
-  .badge-muted   { @apply bg-app-bg text-muted text-xs font-semibold px-2.5 py-1 rounded-pill; }
-  .badge-navy    { @apply bg-pale text-navy text-xs font-semibold px-2.5 py-1 rounded-pill; }
+  .badge-muted   { @apply bg-app-bg dark:bg-gray-800 text-muted dark:text-gray-400 text-xs font-semibold px-2.5 py-1 rounded-pill; }
+  .badge-navy    { @apply bg-pale dark:bg-navy/20 text-navy dark:text-blue-300 text-xs font-semibold px-2.5 py-1 rounded-pill; }
 
-  /* ── Section eyebrow ── */
+  /* ── Eyebrow ── */
   .eyebrow {
     @apply inline-flex items-center gap-2 text-vivid text-xs font-bold tracking-widest uppercase mb-4;
   }
-  .eyebrow::before {
-    content: '';
-    @apply block w-5 h-0.5 bg-vivid;
-  }
+  .eyebrow::before { content: ''; @apply block w-5 h-0.5 bg-vivid; }
 
-  /* ── Section layout ── */
+  /* ── Section ── */
   .section-inner { @apply max-w-6xl mx-auto; }
-  .sec-title { @apply font-serif text-navy leading-tight tracking-tight; }
-  .sec-body  { @apply text-slate font-light leading-relaxed; }
+  .sec-title     { @apply font-serif text-navy dark:text-white leading-tight tracking-tight; }
+  .sec-body      { @apply text-slate dark:text-gray-400 font-light leading-relaxed; }
 
   /* ── Nav link ── */
   .nav-link {
-    @apply text-slate text-sm font-medium transition-colors duration-200 hover:text-navy;
+    @apply text-slate dark:text-gray-400 text-sm font-medium transition-colors duration-200
+           hover:text-navy dark:hover:text-white;
   }
 
   /* ── Input ── */
   .input {
-    @apply w-full px-4 py-3 rounded-xl border border-border bg-white
-           text-sm font-normal text-gray-800 placeholder-muted
+    @apply w-full px-4 py-3 rounded-xl border border-border dark:border-gray-700
+           bg-white dark:bg-gray-800 text-sm font-normal
+           text-gray-800 dark:text-gray-100 placeholder-muted dark:placeholder-gray-500
            outline-none transition-all duration-200
            focus:border-vivid focus:ring-2 focus:ring-vivid/20;
   }
-  .label { @apply block text-sm font-medium text-navy mb-1.5; }
+  .label { @apply block text-sm font-medium text-navy dark:text-gray-200 mb-1.5; }
 
   /* ── Progress bar ── */
-  .progress-bar {
-    @apply h-2 rounded-pill bg-border overflow-hidden;
-  }
-  .progress-fill {
-    @apply h-full rounded-pill bg-gradient-to-r from-vivid to-blue-400
-           transition-all duration-1000 ease-out;
-  }
+  .progress-bar  { @apply h-2 rounded-pill bg-border dark:bg-gray-700 overflow-hidden; }
+  .progress-fill { @apply h-full rounded-pill bg-gradient-to-r from-vivid to-blue-400 transition-all duration-1000 ease-out; }
 
   /* ── Sidebar ── */
   .sidebar-link {
     @apply flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium
-           text-slate transition-all duration-150
-           hover:bg-pale hover:text-navy;
+           text-slate dark:text-gray-400 transition-all duration-150
+           hover:bg-pale dark:hover:bg-gray-800 hover:text-navy dark:hover:text-white;
   }
   .sidebar-link.active {
-    @apply bg-pale text-navy font-semibold;
+    @apply bg-pale dark:bg-navy/20 text-navy dark:text-blue-300 font-semibold;
   }
 }
 

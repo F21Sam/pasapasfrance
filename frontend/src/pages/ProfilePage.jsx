@@ -1,24 +1,27 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { User, Mail, Globe, LogOut, Save, Check } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { userAPI } from '@/services/api'
 import { PROFILS } from '@/utils/mockData'
+import i18n from '@/i18n'
 
 export default function ProfilePage() {
+  const { t }                        = useTranslation()
   const { user, updateUser, logout } = useAuth()
-  const navigate = useNavigate()
-  const [saved, setSaved]   = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError]   = useState('')
-  const [form, setForm]     = useState({
-    prenom:      user?.prenom    ?? '',
-    email:       user?.email     ?? '',
-    statut:      user?.profile?.statut      ?? '',
+  const navigate                     = useNavigate()
+  const [saved, setSaved]            = useState(false)
+  const [loading, setLoading]        = useState(false)
+  const [error, setError]            = useState('')
+  const [form, setForm]              = useState({
+    prenom:      user?.prenom              ?? '',
+    email:       user?.email               ?? '',
+    statut:      user?.profile?.statut     ?? '',
     nationalite: user?.profile?.nationalite ?? '',
-    langue:      user?.langue               ?? 'fr',
-    logement:    user?.profile?.logement    ?? '',
-    banque:      user?.profile?.banque      ?? '',
+    langue:      user?.langue              ?? 'fr',
+    logement:    user?.profile?.logement   ?? '',
+    banque:      user?.profile?.banque     ?? '',
   })
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
@@ -33,10 +36,16 @@ export default function ProfilePage() {
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
     } catch (err) {
-      setError(err.response?.data?.error || 'Erreur lors de la sauvegarde.')
+      setError(err.response?.data?.error || t('common.error'))
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleLanguageChange = (lng) => {
+    set('langue', lng)
+    i18n.changeLanguage(lng)
+    localStorage.setItem('langue', lng)
   }
 
   const handleLogout = () => { logout(); navigate('/') }
@@ -44,8 +53,8 @@ export default function ProfilePage() {
   return (
     <div className="p-8 max-w-2xl">
       <div className="mb-8">
-        <h1 className="font-serif text-navy text-3xl mb-1">Mon profil</h1>
-        <p className="text-muted text-sm font-light">Modifiez vos informations pour affiner votre parcours.</p>
+        <h1 className="font-serif text-navy text-3xl mb-1">{t('profile.title')}</h1>
+        <p className="text-muted text-sm font-light">{t('profile.subtitle')}</p>
       </div>
 
       {/* Avatar */}
@@ -73,16 +82,18 @@ export default function ProfilePage() {
         {/* Infos personnelles */}
         <div className="card p-6">
           <h2 className="font-semibold text-navy mb-4 flex items-center gap-2">
-            <User size={16} /> Informations personnelles
+            <User size={16} /> {t('profile.personalInfo')}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="label">Prénom</label>
+              <label className="label">{t('profile.firstName')}</label>
               <input type="text" className="input" value={form.prenom}
                 onChange={e => set('prenom', e.target.value)} />
             </div>
             <div>
-              <label className="label flex items-center gap-1.5"><Mail size={13} /> Email</label>
+              <label className="label flex items-center gap-1.5">
+                <Mail size={13} /> {t('profile.email')}
+              </label>
               <input type="email" className="input" value={form.email}
                 onChange={e => set('email', e.target.value)} disabled />
             </div>
@@ -92,11 +103,11 @@ export default function ProfilePage() {
         {/* Profil administratif */}
         <div className="card p-6">
           <h2 className="font-semibold text-navy mb-4 flex items-center gap-2">
-            <Globe size={16} /> Profil administratif
+            <Globe size={16} /> {t('profile.adminProfile')}
           </h2>
           <div className="flex flex-col gap-4">
             <div>
-              <label className="label">Statut</label>
+              <label className="label">{t('profile.status')}</label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {PROFILS.map(p => (
                   <button key={p.value} type="button"
@@ -115,7 +126,7 @@ export default function ProfilePage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="label">Situation logement</label>
+                <label className="label">{t('profile.housing')}</label>
                 <select className="input" value={form.logement}
                   onChange={e => set('logement', e.target.value)}>
                   <option value="">Sélectionner</option>
@@ -125,7 +136,7 @@ export default function ProfilePage() {
                 </select>
               </div>
               <div>
-                <label className="label">Situation bancaire</label>
+                <label className="label">{t('profile.bank')}</label>
                 <select className="input" value={form.banque}
                   onChange={e => set('banque', e.target.value)}>
                   <option value="">Sélectionner</option>
@@ -137,10 +148,11 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="label">Langue préférée</label>
+              <label className="label">{t('profile.language')}</label>
               <div className="flex gap-3">
                 {[{v:'fr',l:'🇫🇷 Français'},{v:'en',l:'🇬🇧 English'}].map(lng => (
-                  <button key={lng.v} type="button" onClick={() => set('langue', lng.v)}
+                  <button key={lng.v} type="button"
+                    onClick={() => handleLanguageChange(lng.v)}
                     className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition-all ${
                       form.langue === lng.v ? 'border-navy bg-pale text-navy' : 'border-border text-slate'
                     }`}>
@@ -156,7 +168,7 @@ export default function ProfilePage() {
         <div className="flex items-center justify-between gap-4">
           <button type="button" onClick={handleLogout}
             className="flex items-center gap-2 text-sm text-slate hover:text-red-500 transition-colors">
-            <LogOut size={15} /> Se déconnecter
+            <LogOut size={15} /> {t('profile.logout')}
           </button>
           <button type="submit" disabled={loading}
             className={`flex items-center gap-2 px-6 py-3 rounded-pill font-semibold text-sm transition-all disabled:opacity-60 ${
@@ -165,8 +177,8 @@ export default function ProfilePage() {
             {loading
               ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               : saved
-                ? <><Check size={15} /> Sauvegardé !</>
-                : <><Save size={15} /> Enregistrer</>
+                ? <><Check size={15} /> {t('profile.saved')}</>
+                : <><Save size={15} /> {t('profile.save')}</>
             }
           </button>
         </div>

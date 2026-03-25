@@ -37,11 +37,6 @@ const generate = async (req, res) => {
     const progressions = []
     for (const step of steps) {
       // Vérifier si les dépendances sont satisfaites
-      const depsSatisfaites = step.dependances.every(dep => {
-        // Pour un nouveau parcours, aucune dépendance n'est satisfaite
-        return false
-      })
-
       const statut = step.dependances.length === 0 ? 'A_FAIRE' : 'BLOQUE'
 
       const progression = await prisma.stepProgression.create({
