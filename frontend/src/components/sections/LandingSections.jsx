@@ -43,28 +43,30 @@ export function StatsSection() {
   )
 }
 
+// ── Section renommée "Qui sommes-nous" avec ancre ──
 export function ProcessSection() {
   const steps = [
-    { n: '01', tag: '5 min',      title: 'Décrivez votre situation',  body: 'Nationalité, statut, date d\'arrivée. Trois questions suffisent à générer votre parcours.' },
+    { n: '01', tag: '5 min',      title: 'Décrivez votre situation',  body: "Nationalité, statut, date d'arrivée. Trois questions suffisent à générer votre parcours." },
     { n: '02', tag: 'Automatique',title: 'Recevez votre parcours',     body: 'Un plan ordonné avec dépendances et priorités. Vous savez exactement quoi faire en premier.' },
     { n: '03', tag: 'Continu',    title: 'Avancez, étape par étape',   body: 'Cochez, uploadez vos documents, recevez des rappels. Votre avancement en temps réel.' },
   ]
   return (
-    <section id="comment-ca-marche" className="py-24 px-6 bg-white">
+    <section id="qui-sommes-nous" className="py-24 px-6 bg-white">
       <div className="max-w-6xl mx-auto">
-        <p className="eyebrow">Comment ça marche</p>
+        <p className="eyebrow">Qui sommes-nous</p>
         <h2 className="sec-title text-[clamp(1.9rem,3vw,2.7rem)] mb-3">Votre parcours en trois étapes</h2>
-        <p className="sec-body text-[.96rem] max-w-lg mb-14">
+        <p className="sec-body text-[.96rem] max-w-lg mb-2">
           Pas besoin de chercher sur dix sites différents. PasàPasFrance fait le tri pour vous, dans le bon ordre.
         </p>
+        <Link to="/qui-sommes-nous" className="text-vivid text-sm font-semibold hover:underline mb-10 inline-block">
+          En savoir plus sur le projet →
+        </Link>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-0.5 bg-border rounded-2xl overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-0.5 bg-border rounded-2xl overflow-hidden mt-4">
           {steps.map((s) => (
             <div key={s.n}
                  className="bg-white px-8 py-10 relative overflow-hidden group hover:bg-pale transition-colors duration-200">
-              {/* Top accent */}
               <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-navy to-vivid" />
-              {/* Tag */}
               <span className="absolute top-5 right-5 bg-pale text-navy text-[.62rem] font-bold tracking-wider uppercase px-2.5 py-1 rounded-pill">
                 {s.tag}
               </span>
@@ -81,11 +83,11 @@ export function ProcessSection() {
 
 export function ProfilesSection() {
   const profiles = [
-    { n: '01', emoji: '🎓', name: 'Étudiant étranger',    sub: 'Visa étudiant, CVEC, CROUS, CPAM',           count: '8 démarches' },
-    { n: '02', emoji: '💼', name: 'Salarié expatrié',     sub: 'Titre de séjour, URSSAF, mutuelle',           count: '11 démarches' },
-    { n: '03', emoji: '🏠', name: 'Au pair / Volontaire', sub: 'Titre de séjour, sécurité sociale',           count: '7 démarches' },
-    { n: '04', emoji: '👨‍👩‍👧', name: 'Nouveau résident',   sub: 'Regroupement familial, CAF, école',           count: '9 démarches' },
-    { n: '05', emoji: '🌍', name: 'Professionnel mobile', sub: 'Mission longue durée, visa, logement',        count: '6 démarches' },
+    { n: '01', icon: 'E', name: 'Etudiant etranger',    sub: 'Visa etudiant, CVEC, CROUS, CPAM',           count: '8 demarches' },
+    { n: '02', icon: 'S', name: 'Salarie expatrie',     sub: 'Titre de sejour, URSSAF, mutuelle',           count: '11 demarches' },
+    { n: '03', icon: 'A', name: 'Au pair / Volontaire', sub: 'Titre de sejour, securite sociale',           count: '7 demarches' },
+    { n: '04', icon: 'R', name: 'Nouveau resident',     sub: 'Regroupement familial, CAF, ecole',           count: '9 demarches' },
+    { n: '05', icon: 'P', name: 'Professionnel mobile', sub: 'Mission longue duree, visa, logement',        count: '6 demarches' },
   ]
   return (
     <section id="demarches" className="py-24 px-6 bg-app-bg">
@@ -105,7 +107,7 @@ export function ProfilesSection() {
             >
               <div className="flex items-center gap-5">
                 <span className="font-serif italic text-[1.3rem] text-border w-7">{p.n}</span>
-                <span className="text-xl">{p.emoji}</span>
+
                 <div>
                   <h4 className="text-[.92rem] font-semibold text-navy">{p.name}</h4>
                   <p className="text-[.75rem] text-muted font-light mt-0.5">{p.sub}</p>
@@ -131,14 +133,13 @@ const MINI_BARS = [
 ]
 
 const FEATURES = [
-  { icon: '📊', title: 'Progression en temps réel', body: 'Visualisez l\'avancement de chaque démarche et votre taux global de complétion.', wide: true },
-  { icon: '🔔', title: 'Rappels intelligents',       body: 'Alertes sur vos échéances légales et documents manquants.' },
-  { icon: '📄', title: 'Gestion documentaire',       body: 'Uploadez, organisez et suivez l\'état de chacun de vos justificatifs.' },
-  { icon: '🗺️', title: 'Dépendances visuelles',      body: 'Sachez exactement quoi débloquer pour avancer dans votre parcours.' },
-  { icon: '🔗', title: 'Sources officielles',        body: 'Chaque démarche pointe vers les sites gouvernementaux officiels.' },
-  { icon: '🌐', title: 'Multilingue',                body: 'Interface en français et en anglais. D\'autres langues à venir.' },
+  { icon: '▶', title: 'Progression en temps réel', body: "Visualisez l'avancement de chaque démarche et votre taux global de complétion.", wide: true },
+  { icon: '◉', title: 'Rappels intelligents',       body: 'Alertes sur vos échéances légales et documents manquants.' },
+  { icon: '▣', title: 'Gestion documentaire',       body: "Uploadez, organisez et suivez l'état de chacun de vos justificatifs." },
+  { icon: '◈', title: 'Dépendances visuelles',      body: 'Sachez exactement quoi débloquer pour avancer dans votre parcours.' },
+  { icon: '◎', title: 'Sources officielles',        body: 'Chaque démarche pointe vers les sites gouvernementaux officiels.' },
+  { icon: '◐', title: 'Multilingue',                body: "Interface en français et en anglais. D'autres langues à venir." },
 ]
-
 export function BentoSection() {
   return (
     <section className="py-24 px-6 bg-navy-dark">
@@ -155,7 +156,9 @@ export function BentoSection() {
               key={f.title}
               className={`bg-white/5 border border-white/9 rounded-[18px] p-7 hover:bg-white/9 hover:-translate-y-1 transition-all duration-200 ${f.wide ? 'md:col-span-2' : ''}`}
             >
-              <div className="w-11 h-11 rounded-xl bg-vivid/18 flex items-center justify-center text-xl mb-4">{f.icon}</div>
+              <div className="w-11 h-11 rounded-xl bg-vivid/18 flex items-center justify-center text-white font-bold text-sm mb-4">
+                {f.icon}
+              </div>
               <h3 className="text-white font-bold text-[.95rem] mb-2">{f.title}</h3>
               <p className="text-white/50 font-light text-[.82rem] leading-relaxed">{f.body}</p>
 
@@ -196,7 +199,7 @@ export function CTASection() {
           Créez votre profil gratuitement et recevez votre liste personnalisée de démarches en moins de deux minutes.
         </p>
         <Link to="/register" className="btn-white inline-block">
-          Commencer gratuitement →
+          S'inscrire gratuitement →
         </Link>
       </div>
     </section>
@@ -205,11 +208,57 @@ export function CTASection() {
 
 export function FooterSection() {
   return (
-    <footer className="bg-navy-dark px-6 py-9 border-t border-white/7 flex items-center justify-between flex-wrap gap-4">
-      <img src="/logo.png" alt="PasàPasFrance" className="h-8 w-auto brightness-0 invert opacity-80" />
-      <p className="text-white/30 text-xs">
-        Projet académique UML & Fullstack · React · Node.js · MySQL · 2025
-      </p>
+    <footer className="bg-navy px-6 py-12 border-t border-white/10">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between gap-10 mb-10">
+
+          {/* Logo + description */}
+          <div className="max-w-xs">
+            <img src="/logo.png" alt="PasàPasFrance" className="h-9 w-auto mb-4" />
+            <p className="text-white/50 text-xs font-light leading-relaxed">
+              Accompagnement administratif pour les nouveaux arrivants en France.
+              Un parcours personnalisé, ordonné et visualisable.
+            </p>
+          </div>
+
+          {/* Liens */}
+          <div className="flex flex-wrap gap-12">
+            <div>
+              <p className="text-white text-xs font-semibold uppercase tracking-widest mb-4">Navigation</p>
+              <div className="flex flex-col gap-2.5">
+                <Link to="/" className="text-white/50 text-xs hover:text-white transition-colors">Accueil</Link>
+                <Link to="/qui-sommes-nous" className="text-white/50 text-xs hover:text-white transition-colors">Qui sommes-nous</Link>
+                <Link to="/nous-contacter" className="text-white/50 text-xs hover:text-white transition-colors">Nous contacter</Link>
+              </div>
+            </div>
+            <div>
+              <p className="text-white text-xs font-semibold uppercase tracking-widest mb-4">Compte</p>
+              <div className="flex flex-col gap-2.5">
+                <Link to="/login"    className="text-white/50 text-xs hover:text-white transition-colors">Se connecter</Link>
+                <Link to="/register" className="text-white/50 text-xs hover:text-white transition-colors">S'inscrire</Link>
+              </div>
+            </div>
+            <div>
+              <p className="text-white text-xs font-semibold uppercase tracking-widest mb-4">Projet</p>
+              <div className="flex flex-col gap-2.5">
+                <a href="https://github.com/F21Sam/pasapasfrance" target="_blank" rel="noreferrer"
+                   className="text-white/50 text-xs hover:text-white transition-colors">GitHub</a>
+                <span className="text-white/30 text-xs">React · Node.js · PostgreSQL</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-white/30 text-xs">
+            Projet académique UML & Fullstack · ESGI Paris · 2025-2026
+          </p>
+          <p className="text-white/30 text-xs">
+            Fait avec soin par Fanta Samassa & Ekshade Kakpo
+          </p>
+        </div>
+      </div>
     </footer>
   )
 }

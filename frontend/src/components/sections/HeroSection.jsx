@@ -52,7 +52,7 @@ export default function HeroSection() {
 
             <div className="flex flex-wrap gap-3 mb-12">
               <Link to="/register" className="btn-primary">✦ Créer mon parcours</Link>
-              <button className="btn-ghost">Voir une démo →</button>
+              <Link to="/register" className="btn-ghost">Voir une démo →</Link>
             </div>
 
             <div className="flex items-center gap-5 pt-8 border-t border-white/10">
@@ -79,7 +79,7 @@ export default function HeroSection() {
               {/* Card header */}
               <div className="bg-navy px-6 py-4 flex items-center justify-between">
                 <div>
-                  <p className="text-white/45 text-xs">Bonjour 👋</p>
+                  <p className="text-white/45 text-xs">Bonjour !</p>
                   <p className="text-white font-serif text-[1.05rem]">Mon parcours administratif</p>
                 </div>
                 <span className="font-serif italic text-[2rem] text-mid-blue leading-none">36%</span>

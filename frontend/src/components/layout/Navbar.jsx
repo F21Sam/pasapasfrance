@@ -4,10 +4,10 @@ import { Menu, X, Bell } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 
 export default function Navbar({ transparent = false }) {
-  const [scrolled, setScrolled]   = useState(false)
-  const [menuOpen, setMenuOpen]   = useState(false)
-  const { user, logout }          = useAuth()
-  const navigate                  = useNavigate()
+  const [scrolled, setScrolled] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const { user, logout }        = useAuth()
+  const navigate                = useNavigate()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -16,6 +16,19 @@ export default function Navbar({ transparent = false }) {
   }, [])
 
   const handleLogout = () => { logout(); navigate('/') }
+
+  const handleAnchor = (e, id) => {
+    e.preventDefault()
+    setMenuOpen(false)
+    if (window.location.pathname !== '/') {
+      navigate('/')
+      setTimeout(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+      }, 300)
+    } else {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
 
   const base = transparent && !scrolled
     ? 'bg-transparent border-transparent'
@@ -32,8 +45,13 @@ export default function Navbar({ transparent = false }) {
 
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-8">
-          <Link to="/#comment-ca-marche" className="nav-link">Comment ça marche</Link>
-          <Link to="/#demarches"         className="nav-link">Démarches</Link>
+          <Link to="/qui-sommes-nous" className="nav-link">
+            Qui sommes-nous
+          </Link>
+          <a href="/#demarches" onClick={e => handleAnchor(e, 'demarches')} className="nav-link">
+            Démarches
+          </a>
+          <Link to="/nous-contacter" className="nav-link">Nous contacter</Link>
           {user ? (
             <>
               <Link to="/app/dashboard" className="nav-link">Mon tableau de bord</Link>
@@ -47,7 +65,7 @@ export default function Navbar({ transparent = false }) {
             <>
               <Link to="/login" className="nav-link">Se connecter</Link>
               <Link to="/register" className="btn-navy text-sm px-5 py-2">
-                Commencer gratuitement
+                S'inscrire
               </Link>
             </>
           )}
@@ -65,17 +83,24 @@ export default function Navbar({ transparent = false }) {
       {/* Mobile menu */}
       {menuOpen && (
         <div className="md:hidden bg-white border-t border-border px-6 py-4 flex flex-col gap-3">
-          <Link to="/#comment-ca-marche" className="nav-link py-1" onClick={() => setMenuOpen(false)}>Comment ça marche</Link>
-          <Link to="/#demarches"         className="nav-link py-1" onClick={() => setMenuOpen(false)}>Démarches</Link>
+          <a href="/#qui-sommes-nous" className="nav-link py-1" onClick={e => handleAnchor(e, 'qui-sommes-nous')}>
+            Qui sommes-nous
+          </a>
+          <a href="/#demarches" className="nav-link py-1" onClick={e => handleAnchor(e, 'demarches')}>
+            Démarches
+          </a>
+          <Link to="/nous-contacter" className="nav-link py-1" onClick={() => setMenuOpen(false)}>
+            Nous contacter
+          </Link>
           {user ? (
             <>
-              <Link to="/app/dashboard"  className="nav-link py-1" onClick={() => setMenuOpen(false)}>Tableau de bord</Link>
+              <Link to="/app/dashboard" className="nav-link py-1" onClick={() => setMenuOpen(false)}>Tableau de bord</Link>
               <button onClick={handleLogout} className="nav-link py-1 text-left">Se déconnecter</button>
             </>
           ) : (
             <>
               <Link to="/login"    className="nav-link py-1" onClick={() => setMenuOpen(false)}>Se connecter</Link>
-              <Link to="/register" className="btn-navy text-center mt-1" onClick={() => setMenuOpen(false)}>Commencer</Link>
+              <Link to="/register" className="btn-navy text-center mt-1" onClick={() => setMenuOpen(false)}>S'inscrire</Link>
             </>
           )}
         </div>
