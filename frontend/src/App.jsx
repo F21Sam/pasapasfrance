@@ -14,6 +14,7 @@ import NousContacterPage  from '@/pages/NousContacterPage'
 import AppLayout          from '@/components/layout/AppLayout'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { ThemeProvider } from '@/context/ThemeContext'
+import AdminPage from '@/pages/AdminPage'
 
 function PrivateRoute({ children }) {
   const { user } = useAuth()
@@ -40,6 +41,7 @@ export default function App() {
               <Route path="documents"     element={<DocumentsPage />} />
               <Route path="notifications" element={<NotificationsPage />} />
               <Route path="profil"        element={<ProfilePage />} />
+              <Route path="admin" element={<AdminPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
