@@ -51,15 +51,26 @@ const updateMe = async (req, res) => {
       const profileData = {}
       if (data.statut)      profileData.statut      = data.statut
       if (data.nationalite) profileData.nationalite = data.nationalite
-      if (data.dateArrivee) profileData.dateArrivee = new Date(data.dateArrivee)
+      if (data.dateArrivee && data.dateArrivee !== '') {
+      const date = new Date(data.dateArrivee)
+      if (!isNaN(date.getTime())) profileData.dateArrivee = date
+      }
       if (data.logement)    profileData.logement    = data.logement
       if (data.banque)      profileData.banque      = data.banque
 
-      await prisma.profile.upsert({
-        where:  { userId: req.userId },
-        update: profileData,
-        create: { userId: req.userId, ...profileData }
-      })
+    await prisma.profile.upsert({
+      where:  { userId: req.userId },
+      update: profileData,
+      create: {
+        userId:      req.userId,
+        statut:      profileData.statut      ?? 'ETUDIANT',
+        nationalite: profileData.nationalite ?? '',
+        dateArrivee: profileData.dateArrivee ?? new Date(),
+        logement:    profileData.logement    ?? 'HEBERGE',
+        banque:      profileData.banque      ?? 'AUCUN',
+        ...profileData,
+      }
+    })
     }
 
     // Notification de confirmation

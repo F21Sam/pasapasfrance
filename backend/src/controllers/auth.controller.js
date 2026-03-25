@@ -53,7 +53,7 @@ const register = async (req, res) => {
         password: hashedPassword,
         langue:   data.langue || 'fr',
       },
-      select: { id: true, prenom: true, email: true, langue: true, createdAt: true }
+    select: { id: true, prenom: true, email: true, langue: true, createdAt: true, profile: true }
     })
 
     const tokens = generateTokens(user.id)
@@ -87,10 +87,12 @@ const login = async (req, res) => {
 
     const tokens = generateTokens(user.id)
 
-    res.json({
-      user: { id: user.id, prenom: user.prenom, email: user.email, langue: user.langue },
-      ...tokens
+    const fullUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { id: true, prenom: true, email: true, langue: true, profile: true }
     })
+
+    res.json({ user: fullUser, ...tokens })
   } catch (err) {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: err.errors[0].message })
