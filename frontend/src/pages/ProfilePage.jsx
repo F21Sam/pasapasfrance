@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { User, Mail, Globe, LogOut, Save, Check } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
-import { userAPI } from '@/services/api'
 import { PROFILS } from '@/utils/mockData'
 import i18n from '@/i18n'
+import { userAPI, journeyAPI } from '@/services/api'
 
 export default function ProfilePage() {
   const { t }                        = useTranslation()
@@ -26,21 +26,33 @@ export default function ProfilePage() {
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
-  const handleSave = async (e) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-    try {
-      const res = await userAPI.updateMe(form)
-      updateUser({ ...user, prenom: form.prenom, profile: res.data.profile ?? user.profile })
-      setSaved(true)
-      setTimeout(() => setSaved(false), 2500)
-    } catch (err) {
-      setError(err.response?.data?.error || t('common.error'))
-    } finally {
-      setLoading(false)
+const handleSave = async (e) => {
+  e.preventDefault()
+  setError('')
+  setLoading(true)
+  try {
+    // 1. Sauvegarder le profil
+    const res = await userAPI.updateMe(form)
+    updateUser({ ...user, prenom: form.prenom, langue: form.langue, profile: res.data.profile ?? user.profile })
+
+    // 2. Régénérer le parcours avec le nouveau profil
+    if (form.statut && form.logement && form.banque) {
+      await journeyAPI.generate({
+        statut:      form.statut,
+        nationalite: form.nationalite,
+        logement:    form.logement,
+        banque:      form.banque,
+      })
     }
+
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2500)
+  } catch (err) {
+    setError(err.response?.data?.error || t('common.error'))
+  } finally {
+    setLoading(false)
   }
+}
 
   const handleLanguageChange = (lng) => {
     set('langue', lng)

@@ -4,23 +4,27 @@ const ThemeContext = createContext(null)
 
 export function ThemeProvider({ children }) {
   const [dark, setDark] = useState(() => {
+    // Lire depuis localStorage au démarrage
     const saved = localStorage.getItem('theme')
-    if (saved) return saved === 'dark'
+    if (saved === 'dark') return true
+    if (saved === 'light') return false
+    // Sinon détecter le thème système
     return window.matchMedia('(prefers-color-scheme: dark)').matches
   })
 
   useEffect(() => {
-    const root = document.documentElement
+    const html = document.documentElement
     if (dark) {
-      root.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
+      html.classList.add('dark')
+      html.classList.remove('light')
     } else {
-      root.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
+      html.classList.remove('dark')
+      html.classList.add('light')
     }
+    localStorage.setItem('theme', dark ? 'dark' : 'light')
   }, [dark])
 
-  const toggle = () => setDark(d => !d)
+  const toggle = () => setDark(prev => !prev)
 
   return (
     <ThemeContext.Provider value={{ dark, toggle }}>
