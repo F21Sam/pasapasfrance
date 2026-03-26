@@ -5,9 +5,8 @@
 // ══════════════════════════════════════════════════════
 
 generator client {
-    provider      = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-1.1.x"]
-
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -24,7 +23,6 @@ model User {
   langue    String   @default("fr")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  role String @default("USER") // USER ou ADMIN
 
   // Relations
   profile            Profile?

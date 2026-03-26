@@ -136,23 +136,27 @@ function StepModal({ step, onSave, onClose }) {
 
 // ══════════════════════════════════════════════
 export default function AdminPage() {
-  const { user }                  = useAuth()
+  const { user, loading } = useAuth()
   const navigate                  = useNavigate()
   const [tab, setTab]             = useState('stats')
   const [stats, setStats]         = useState(null)
   const [users, setUsers]         = useState([])
   const [steps, setSteps]         = useState([])
-  const [loading, setLoading]     = useState(false)
   const [confirm, setConfirm]     = useState(null)
   const [stepModal, setStepModal] = useState(null)
   const [error, setError]         = useState('')
 
-  // Vérifier que l'user est admin
-  useEffect(() => {
-    if (user && user.role !== 'ADMIN') navigate('/app/dashboard')
-  }, [user])
+  // Vérifier que l'user est admin 
+// APRÈS
+const { user, loading } = useAuth()
 
-  useEffect(() => { fetchData() }, [tab])
+useEffect(() => {
+  if (loading) return  // attendre que le contexte soit chargé
+  if (!user) { navigate('/login'); return }
+  if (user.role !== 'ADMIN') navigate('/app/dashboard')
+}, [user, loading])
+
+useEffect(() => { fetchData() }, [tab])
 
   const fetchData = async () => {
     setLoading(true)
@@ -168,6 +172,7 @@ export default function AdminPage() {
         const res = await adminAPI.getSteps()
         setSteps(res.data ?? [])
       }
+      
     } catch (err) {
       setError('Erreur lors du chargement des données.')
     } finally {
