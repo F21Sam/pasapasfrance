@@ -5,16 +5,15 @@ import { useAuth } from '@/context/AuthContext'
 import api from '@/services/api'
 
 const adminAPI = {
-  getStats:       () => api.get('/admin/stats'),
-  getUsers:       () => api.get('/admin/users'),
-  deleteUser:     (id) => api.delete(`/admin/users/${id}`),
-  getSteps:       () => api.get('/admin/steps'),
-  createStep:     (data) => api.post('/admin/steps', data),
-  updateStep:     (id, data) => api.put(`/admin/steps/${id}`, data),
-  deleteStep:     (id) => api.delete(`/admin/steps/${id}`),
+  getStats:   () => api.get('/admin/stats'),
+  getUsers:   () => api.get('/admin/users'),
+  deleteUser: (id) => api.delete(`/admin/users/${id}`),
+  getSteps:   () => api.get('/admin/steps'),
+  createStep: (data) => api.post('/admin/steps', data),
+  updateStep: (id, data) => api.put(`/admin/steps/${id}`, data),
+  deleteStep: (id) => api.delete(`/admin/steps/${id}`),
 }
 
-// ── Stat Card ──────────────────────────────────
 function StatCard({ icon: Icon, label, value, color }) {
   return (
     <div className="card px-6 py-5 flex items-center gap-4">
@@ -29,7 +28,6 @@ function StatCard({ icon: Icon, label, value, color }) {
   )
 }
 
-// ── Modal confirmation suppression ────────────
 function ConfirmModal({ message, onConfirm, onCancel }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -53,15 +51,14 @@ function ConfirmModal({ message, onConfirm, onCancel }) {
   )
 }
 
-// ── Modal démarche (create/edit) ───────────────
 function StepModal({ step, onSave, onClose }) {
   const [form, setForm] = useState({
-    titre:       step?.titre       ?? '',
-    description: step?.description ?? '',
-    organisme:   step?.organisme   ?? '',
-    delai:       step?.delai       ?? '',
-    priorite:    step?.priorite    ?? 'IMPORTANTE',
-    siteOfficiel:step?.siteOfficiel?? '',
+    titre:        step?.titre        ?? '',
+    description:  step?.description  ?? '',
+    organisme:    step?.organisme    ?? '',
+    delai:        step?.delai        ?? '',
+    priorite:     step?.priorite     ?? 'IMPORTANTE',
+    siteOfficiel: step?.siteOfficiel ?? '',
   })
   const [loading, setLoading] = useState(false)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
@@ -69,12 +66,8 @@ function StepModal({ step, onSave, onClose }) {
   const handleSave = async () => {
     if (!form.titre) return
     setLoading(true)
-    try {
-      await onSave(form)
-      onClose()
-    } finally {
-      setLoading(false)
-    }
+    try { await onSave(form); onClose() }
+    finally { setLoading(false) }
   }
 
   return (
@@ -94,7 +87,7 @@ function StepModal({ step, onSave, onClose }) {
           </div>
           <div>
             <label className="label">Description</label>
-            <textarea className="input min-h-[80px] resize-none" value={form.description} onChange={e => set('description', e.target.value)} placeholder="Description de la démarche..." />
+            <textarea className="input min-h-[80px] resize-none" value={form.description} onChange={e => set('description', e.target.value)} placeholder="Description..." />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -136,27 +129,25 @@ function StepModal({ step, onSave, onClose }) {
 
 // ══════════════════════════════════════════════
 export default function AdminPage() {
-  const { user, loading } = useAuth()
-  const navigate                  = useNavigate()
-  const [tab, setTab]             = useState('stats')
-  const [stats, setStats]         = useState(null)
-  const [users, setUsers]         = useState([])
-  const [steps, setSteps]         = useState([])
-  const [confirm, setConfirm]     = useState(null)
-  const [stepModal, setStepModal] = useState(null)
-  const [error, setError]         = useState('')
+  const { user, loading: authLoading } = useAuth()
+  const navigate                       = useNavigate()
+  const [tab, setTab]                  = useState('stats')
+  const [stats, setStats]              = useState(null)
+  const [users, setUsers]              = useState([])
+  const [steps, setSteps]              = useState([])
+  const [loading, setLoading]          = useState(false)
+  const [confirm, setConfirm]          = useState(null)
+  const [stepModal, setStepModal]      = useState(null)
+  const [error, setError]              = useState('')
 
-  // Vérifier que l'user est admin 
-// APRÈS
-const { user, loading } = useAuth()
+  // Vérifier le rôle ADMIN
+  useEffect(() => {
+    if (authLoading) return
+    if (!user) { navigate('/login'); return }
+    if (user.role !== 'ADMIN') navigate('/app/dashboard')
+  }, [user, authLoading])
 
-useEffect(() => {
-  if (loading) return  // attendre que le contexte soit chargé
-  if (!user) { navigate('/login'); return }
-  if (user.role !== 'ADMIN') navigate('/app/dashboard')
-}, [user, loading])
-
-useEffect(() => { fetchData() }, [tab])
+  useEffect(() => { fetchData() }, [tab])
 
   const fetchData = async () => {
     setLoading(true)
@@ -172,8 +163,7 @@ useEffect(() => { fetchData() }, [tab])
         const res = await adminAPI.getSteps()
         setSteps(res.data ?? [])
       }
-      
-    } catch (err) {
+    } catch {
       setError('Erreur lors du chargement des données.')
     } finally {
       setLoading(false)
@@ -185,9 +175,7 @@ useEffect(() => { fetchData() }, [tab])
       await adminAPI.deleteUser(userId)
       setUsers(prev => prev.filter(u => u.id !== userId))
       setConfirm(null)
-    } catch {
-      setError('Erreur lors de la suppression.')
-    }
+    } catch { setError('Erreur lors de la suppression.') }
   }
 
   const handleDeleteStep = async (stepId) => {
@@ -195,9 +183,7 @@ useEffect(() => { fetchData() }, [tab])
       await adminAPI.deleteStep(stepId)
       setSteps(prev => prev.filter(s => s.id !== stepId))
       setConfirm(null)
-    } catch {
-      setError('Erreur lors de la suppression.')
-    }
+    } catch { setError('Erreur lors de la suppression.') }
   }
 
   const handleSaveStep = async (form) => {
@@ -209,9 +195,7 @@ useEffect(() => { fetchData() }, [tab])
         const res = await adminAPI.createStep(form)
         setSteps(prev => [...prev, res.data])
       }
-    } catch {
-      setError('Erreur lors de la sauvegarde.')
-    }
+    } catch { setError('Erreur lors de la sauvegarde.') }
   }
 
   const TABS = [
@@ -220,10 +204,16 @@ useEffect(() => { fetchData() }, [tab])
     { id: 'steps', label: 'Démarches' },
   ]
 
+  if (authLoading) return (
+    <div className="flex justify-center items-center min-h-screen">
+      <div className="w-8 h-8 border-2 border-vivid/30 border-t-vivid rounded-full animate-spin" />
+    </div>
+  )
+
   return (
     <div className="p-8">
       {confirm && <ConfirmModal {...confirm} />}
-      {stepModal !== undefined && stepModal !== null && typeof stepModal === 'object' && 'open' in stepModal && stepModal.open && (
+      {stepModal?.open && (
         <StepModal step={stepModal.data} onSave={handleSaveStep} onClose={() => setStepModal(null)} />
       )}
 
@@ -263,23 +253,22 @@ useEffect(() => { fetchData() }, [tab])
         </div>
       )}
 
-      {/* ── STATS ── */}
+      {/* STATS */}
       {!loading && tab === 'stats' && stats && (
         <div className="flex flex-col gap-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard icon={Users}     label="Utilisateurs"  value={stats.totalUsers}     color="bg-vivid" />
-            <StatCard icon={FileText}  label="Démarches"     value={stats.totalSteps}     color="bg-navy" />
-            <StatCard icon={FolderOpen}label="Documents"     value={stats.totalDocuments} color="bg-success" />
-            <StatCard icon={FileText}  label="Parcours générés" value={stats.totalJourneys} color="bg-warning" />
+            <StatCard icon={Users}      label="Utilisateurs"     value={stats.totalUsers}     color="bg-vivid" />
+            <StatCard icon={FileText}   label="Démarches"        value={stats.totalSteps}     color="bg-navy" />
+            <StatCard icon={FolderOpen} label="Documents"        value={stats.totalDocuments} color="bg-success" />
+            <StatCard icon={FileText}   label="Parcours générés" value={stats.totalJourneys}  color="bg-warning" />
           </div>
-
           <div className="card p-6">
             <h2 className="font-semibold text-navy mb-4">Inscriptions récentes</h2>
-            {stats.recentUsers?.length === 0 ? (
+            {!stats.recentUsers?.length ? (
               <p className="text-muted text-sm font-light">Aucun utilisateur récent.</p>
             ) : (
               <div className="flex flex-col gap-2">
-                {stats.recentUsers?.map(u => (
+                {stats.recentUsers.map(u => (
                   <div key={u.id} className="flex items-center justify-between py-2.5 border-b border-border last:border-0">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-pale flex items-center justify-center text-navy font-bold text-sm">
@@ -299,13 +288,13 @@ useEffect(() => { fetchData() }, [tab])
         </div>
       )}
 
-      {/* ── USERS ── */}
+      {/* USERS */}
       {!loading && tab === 'users' && (
         <div className="card overflow-hidden">
-          <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+          <div className="px-6 py-4 border-b border-border">
             <p className="font-semibold text-navy text-sm">{users.length} utilisateur{users.length > 1 ? 's' : ''}</p>
           </div>
-          {users.length === 0 ? (
+          {!users.length ? (
             <div className="p-12 text-center text-muted font-light text-sm">Aucun utilisateur.</div>
           ) : (
             <div className="divide-y divide-border">
@@ -319,23 +308,19 @@ useEffect(() => { fetchData() }, [tab])
                     <p className="text-xs text-muted">{u.email}</p>
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-pill ${
-                      u.profile?.statut ? 'badge-navy' : 'badge-muted'
-                    }`}>
+                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-pill ${u.role === 'ADMIN' ? 'badge-warning' : 'badge-navy'}`}>
+                      {u.role}
+                    </span>
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-pill badge-muted">
                       {u.profile?.statut?.toLowerCase() ?? 'Sans profil'}
                     </span>
-                    <p className="text-xs text-muted hidden sm:block">
-                      {new Date(u.createdAt).toLocaleDateString('fr-FR')}
-                    </p>
+                    <p className="text-xs text-muted hidden sm:block">{new Date(u.createdAt).toLocaleDateString('fr-FR')}</p>
                     {u.role !== 'ADMIN' && (
-                      <button
-                        onClick={() => setConfirm({
-                          message: `Supprimer l'utilisateur "${u.prenom}" (${u.email}) ? Cette action est irréversible.`,
-                          onConfirm: () => handleDeleteUser(u.id),
-                          onCancel: () => setConfirm(null),
-                        })}
-                        className="p-1.5 rounded-lg text-muted hover:text-red-500 hover:bg-red-50 transition-all"
-                      >
+                      <button onClick={() => setConfirm({
+                        message: `Supprimer "${u.prenom}" (${u.email}) ? Cette action est irréversible.`,
+                        onConfirm: () => handleDeleteUser(u.id),
+                        onCancel:  () => setConfirm(null),
+                      })} className="p-1.5 rounded-lg text-muted hover:text-red-500 hover:bg-red-50 transition-all">
                         <Trash2 size={14} />
                       </button>
                     )}
@@ -347,31 +332,20 @@ useEffect(() => { fetchData() }, [tab])
         </div>
       )}
 
-      {/* ── STEPS ── */}
+      {/* STEPS */}
       {!loading && tab === 'steps' && (
         <div>
           <div className="flex justify-end mb-4">
-            <button
-              onClick={() => setStepModal({ open: true, data: null })}
-              className="flex items-center gap-2 px-4 py-2 rounded-pill bg-vivid text-white text-sm font-semibold hover:bg-blue-500 transition-colors"
-            >
+            <button onClick={() => setStepModal({ open: true, data: null })}
+              className="flex items-center gap-2 px-4 py-2 rounded-pill bg-vivid text-white text-sm font-semibold hover:bg-blue-500 transition-colors">
               <Plus size={15} /> Nouvelle démarche
             </button>
           </div>
-
-          {stepModal?.open && (
-            <StepModal
-              step={stepModal.data}
-              onSave={handleSaveStep}
-              onClose={() => setStepModal(null)}
-            />
-          )}
-
           <div className="card overflow-hidden">
             <div className="px-6 py-4 border-b border-border">
               <p className="font-semibold text-navy text-sm">{steps.length} démarche{steps.length > 1 ? 's' : ''}</p>
             </div>
-            {steps.length === 0 ? (
+            {!steps.length ? (
               <div className="p-12 text-center text-muted font-light text-sm">Aucune démarche.</div>
             ) : (
               <div className="divide-y divide-border">
@@ -381,27 +355,21 @@ useEffect(() => { fetchData() }, [tab])
                       <div className="flex items-center gap-2 mb-0.5">
                         <p className="text-sm font-semibold text-navy">{s.titre}</p>
                         <span className={`text-[.65rem] font-semibold px-2 py-0.5 rounded-pill ${
-                          s.priorite === 'URGENTE'    ? 'badge-warning' :
-                          s.priorite === 'IMPORTANTE' ? 'badge-navy'    : 'badge-muted'
+                          s.priorite === 'URGENTE' ? 'badge-warning' : s.priorite === 'IMPORTANTE' ? 'badge-navy' : 'badge-muted'
                         }`}>{s.priorite?.toLowerCase()}</span>
                       </div>
                       <p className="text-xs text-muted">{s.organisme} · {s.delai}</p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <button
-                        onClick={() => setStepModal({ open: true, data: s })}
-                        className="p-1.5 rounded-lg text-muted hover:text-vivid hover:bg-pale transition-all text-xs font-medium px-3"
-                      >
+                      <button onClick={() => setStepModal({ open: true, data: s })}
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-vivid hover:bg-pale transition-all">
                         Modifier
                       </button>
-                      <button
-                        onClick={() => setConfirm({
-                          message: `Supprimer la démarche "${s.titre}" ? Cette action est irréversible.`,
-                          onConfirm: () => handleDeleteStep(s.id),
-                          onCancel: () => setConfirm(null),
-                        })}
-                        className="p-1.5 rounded-lg text-muted hover:text-red-500 hover:bg-red-50 transition-all"
-                      >
+                      <button onClick={() => setConfirm({
+                        message: `Supprimer "${s.titre}" ? Cette action est irréversible.`,
+                        onConfirm: () => handleDeleteStep(s.id),
+                        onCancel:  () => setConfirm(null),
+                      })} className="p-1.5 rounded-lg text-muted hover:text-red-500 hover:bg-red-50 transition-all">
                         <Trash2 size={14} />
                       </button>
                     </div>
